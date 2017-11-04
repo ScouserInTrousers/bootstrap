@@ -3,7 +3,10 @@
 
 import itertools as it
 import numpy as np
-import pandas as pd
+
+
+def antithetic(data):
+    return np.ascontiguousarray(data)
 
 
 def binomial(n, r):
@@ -40,7 +43,8 @@ def estimate(data_gen, estimators):
     del tees
     num_samples = sum(1 for _ in len_gen)  # or num_samples = len(list(len_gen))
     return {
-        estimator.__name__: np.fromiter(it.imap(estimator, sample_gen), dtype=np.float)
+        estimator.__name__: np.fromiter(it.imap(estimator, sample_gen),
+                                        dtype=np.float, count=num_samples)
         for estimator, sample_gen in it.izip(estimators, sample_gens)
     }
 
@@ -50,6 +54,12 @@ def resample(data, B):
     Return `B` bootstrap samples of `data` as a generator. The motivation for
     this is that it may be desirable to calculate several statistics of the
     data; returning as a generator lends itself to itertools.tee.
+    Args:
+        data (array-like): the numerical values to be resampled. N.b. will be
+            cast to Numpy array
+        B (int): the amount of bootstrap samples to produce
+    Returns:
+        (PyGenObject): generator of Numpy arrays the same size as `data`
     """
     to_be_sampled = data.ravel()
     for _ in xrange(0, B):
