@@ -31,23 +31,18 @@ def estimate(data_gen, estimators):
     Returns:
         (dict): keys = names of estimators; values = resulting arrays of calc
     """
-    tees = it.tee(iterable=data_gen, n=len(estimators) + 1)
+    # no keywords due to low-level C API
+    # https://stackoverflow.com/questions/24463202/typeerror-get-takes-no-keyword-arguments
+    tees = it.tee(data_gen, len(estimators) + 1)
     # 1 more than specified is created to get the length of `data_gen`; i.e. #
     # of samples in `data_gen`
     len_gen, sample_gens = tees[0], tees[1:]
     del tees
-    num_samples = sum(1 for _ in len_gen)
-    estimators_and_sample_generators = it.izip(estimators, sample_gens)
-    # izip object of (callable, tee object)
-    # TODO: look into imap with a lambda here
-    estimators_and_distributions = ((estimator.__name__,
-                                     it.imap(estimator, sample_gen))
-                                    for estimator, sample_gen in
-                                    estimators_and_sample_generators)
-    # generator of tuples of (estimator_name, estimator.__call__(sample_gens))
-    return {estimator: np.fromiter(sampling_dist_el, dtype=float,
-                                   count=num_samples)
-            for estimator, sampling_dist_el in estimators_and_distributions}
+    num_samples = sum(1 for _ in len_gen)  # or num_samples = len(list(len_gen))
+    return {
+        estimator.__name__: np.fromiter(it.imap(estimator, sample_gen), dtype=np.float)
+        for estimator, sample_gen in it.izip(estimators, sample_gens)
+    }
 
 
 def resample(data, B):
