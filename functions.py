@@ -6,7 +6,11 @@ import numpy as np
 
 
 def antithetic(data):
-    return np.ascontiguousarray(data)
+    """
+    First pass, estimator is np.mean
+    """
+    x = np.ascontiguousarray(data).ravel().sort()
+    return x
 
 
 def binomial(n, r):
@@ -57,12 +61,12 @@ def resample(data, B):
     Args:
         data (array-like): the numerical values to be resampled. N.b. will be
             cast to Numpy array
-        B (int): the amount of bootstrap samples to produce
+        B (int): the amount of bootstrap pseudo-datasets to create
     Returns:
         (PyGenObject): generator of Numpy arrays the same size as `data`
     """
-    to_be_sampled = data.ravel()
+    to_be_sampled = np.ascontiguousarray(data).ravel()
     for _ in xrange(0, B):
         yield np.random.choice(a=to_be_sampled,
-                               size=data.shape[0],
+                               size=to_be_sampled.shape[0],
                                replace=True)
