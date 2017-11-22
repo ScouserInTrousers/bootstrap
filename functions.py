@@ -13,18 +13,6 @@ def antithetic(data):
     return x
 
 
-def binomial(n, r):
-    """ Binomial coefficient, nCr, aka the "choose" function
-        n! / (r! * (n - r)!)
-    """
-    p = 1
-    for i in xrange(1, min(r, n - r) + 1):
-        p *= n
-        p //= i
-        n -= 1
-    return p
-
-
 def estimate(data_gen, estimators):
     """
     For every statistic in `estimators`, that statistic will be calculated
@@ -61,12 +49,22 @@ def resample(data, B):
     Args:
         data (array-like): the numerical values to be resampled. N.b. will be
             cast to Numpy array
-        B (int): the amount of bootstrap pseudo-datasets to create
+        B (int): the amount of bootstrap pseudo-datasets to create. If B <= 1,
+            returns generator of length 1 with original data as Numpy array
     Returns:
         (PyGenObject): generator of Numpy arrays the same size as `data`
     """
-    to_be_sampled = np.ascontiguousarray(data).ravel()
-    for _ in xrange(0, B):
-        yield np.random.choice(a=to_be_sampled,
-                               size=to_be_sampled.shape[0],
-                               replace=True)
+    try:
+        to_be_sampled = np.ascontiguousarray([x for x in data]).ravel()
+    except TypeError:
+        raise ValueError("Dataset must support iteration")
+    else:
+        if not to_be_sampled.size:
+            raise ValueError("Dataset to be resampled must have positive "
+                            "cardinality")
+    if B <= 1:
+        return (original_data for original_data in [to_be_sampled])
+
+    return (np.random.choice(a=to_be_sampled,
+                             size=to_be_sampled.size,
+                             replace=True) for _ in xrange(0, B))
