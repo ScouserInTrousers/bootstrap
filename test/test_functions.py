@@ -1,3 +1,4 @@
+from builtins import next
 from functions import resample
 from hypothesis import given, strategies as st
 from hypothesis.extra import numpy
@@ -15,10 +16,10 @@ def test_resample_empty_data_raises_value_error(data, B):
        B=st.integers(min_value=0, max_value=1))
 def test_resample_nonempty_data_passed_B_leq_1(data, B):
     g = resample(data, B)
-    g.next()
+    next(g)
     # A second next() call should raise StopIteration as it should have length 1
     with pt.raises(StopIteration):
-        g.next()
+        next(g)
 
 
 @given(data=st.iterables(elements=st.floats(), min_size=1, max_size=1e2),

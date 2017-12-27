@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import itertools as it
+from __future__ import division
+from builtins import dict, int, map, range, zip
+from itertools import tee
 import numpy as np
 
 
@@ -26,18 +28,16 @@ def estimate(data_gen, estimators):
     Returns:
         (dict): keys = names of estimators; values = resulting arrays of calc
     """
-    # no keywords due to low-level C API
-    # https://stackoverflow.com/questions/24463202/typeerror-get-takes-no-keyword-arguments
-    tees = it.tee(data_gen, len(estimators) + 1)
+    tees = tee(data_gen, len(estimators) + 1)
     # 1 more than specified is created to get the length of `data_gen`; i.e. #
     # of samples in `data_gen`
     len_gen, sample_gens = tees[0], tees[1:]
     del tees
-    num_samples = sum(1 for _ in len_gen)  # or num_samples = len(list(len_gen))
+    num_samples = sum(1 for _ in len_gen)
     return {
-        estimator.__name__: np.fromiter(it.imap(estimator, sample_gen),
+        estimator.__name__: np.fromiter(map(estimator, sample_gen),
                                         dtype=np.float, count=num_samples)
-        for estimator, sample_gen in it.izip(estimators, sample_gens)
+        for estimator, sample_gen in zip(estimators, sample_gens)
     }
 
 
@@ -61,10 +61,10 @@ def resample(data, B):
     else:
         if not to_be_sampled.size:
             raise ValueError("Dataset to be resampled must have positive "
-                            "cardinality")
+                             "cardinality")
     if B <= 1:
         return (original_data for original_data in [to_be_sampled])
 
     return (np.random.choice(a=to_be_sampled,
                              size=to_be_sampled.size,
-                             replace=True) for _ in xrange(0, B))
+                             replace=True) for _ in range(0, B))
